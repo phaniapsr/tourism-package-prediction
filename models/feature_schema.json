@@ -35,6 +35,14 @@
       "Self Enquiry"
     ]
   },
+  "categorical_mode": {
+    "Designation": "Executive",
+    "Gender": "Male",
+    "MaritalStatus": "Married",
+    "Occupation": "Salaried",
+    "ProductPitched": "Basic",
+    "TypeofContact": "Self Enquiry"
+  },
   "numeric": {
     "Age": {
       "max": 61.0,

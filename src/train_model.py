@@ -128,6 +128,8 @@ def make_schema(train: pd.DataFrame) -> dict:
                     for c in NUMERIC_FEATURES},
         "categorical": {c: sorted(train[c].dropna().unique().tolist())
                         for c in CATEGORICAL_FEATURES},
+        # Most common value per column, used as the app's default selection.
+        "categorical_mode": {c: str(train[c].mode().iloc[0]) for c in CATEGORICAL_FEATURES},
         # Designation and ProductPitched move in lockstep in the data, so the
         # app can flag combinations the model has never seen.
         "observed_designation_product": sorted(pairs.values.tolist()),

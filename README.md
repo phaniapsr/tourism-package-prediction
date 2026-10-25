@@ -20,8 +20,9 @@ GitHub Actions validates the data, trains and tracks the model, commits it to
 │   ├── best_model.joblib            #   preprocessing + best estimator
 │   ├── metrics.json                 #   CV and test metrics for every model
 │   └── feature_schema.json          #   input choices the app uses
-├── app.py                           # Streamlit app
-├── tests/smoke_test_app.py          # loads the committed model and predicts
+├── app.py                           # Streamlit app: Single and Batch prediction tabs
+├── inference.py                     # model loading and CSV cleaning used by the app
+├── tests/smoke_test_app.py          # loads the committed model, runs both tabs
 ├── notebook/                        # executed notebook (submission)
 ├── requirements.txt                 # deployment dependencies (Streamlit Cloud)
 └── requirements-train.txt           # pipeline dependencies (adds MLflow)
@@ -37,7 +38,7 @@ GitHub Actions validates the data, trains and tracks the model, commits it to
 | 1. Register dataset | `validate_data.py` checks the expected columns and target, prints a summary |
 | 2. Prepare data | `prepare_data.py` cleans the data, saves a stratified 80/20 split, uploads it as the `prepared-data` artifact |
 | 3. Build and track model | downloads the artifact, tunes six model families, logs every trial to MLflow (uploaded as the `mlflow-runs` artifact), then commits `models/` to `main` |
-| 4. Verify app | fresh checkout of `main`, installs only `requirements.txt`, runs the app smoke test |
+| 4. Verify app | fresh checkout of `main`, installs only `requirements.txt`, smoke-tests single and batch prediction |
 
 The model commit is made by `github-actions[bot]` with `GITHUB_TOKEN`, so it does not
 re-trigger the workflow. If `main` is protected and blocks pushes from Actions, allow
@@ -56,6 +57,13 @@ mlflow ui --backend-store-uri sqlite:///mlruns/mlflow.db   # browse experiments
 
 streamlit run app.py
 ```
+
+## The app
+
+- **Single Prediction:** fill in a customer's details (a summary updates live) and press *Predict* for the purchase probability.
+- **Batch Prediction:** upload a CSV of customers and download them scored and ranked. The file needs the model's input columns
+  (the tab lists them and offers a template). Extra columns such as `CustomerID` are kept. Missing columns are reported, and
+  unseen values or blanks produce a warning.
 
 ## Deploy the app (Streamlit Community Cloud)
 
