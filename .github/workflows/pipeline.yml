@@ -1,0 +1,142 @@
+name: MLOps pipeline
+
+# Runs when data, pipeline code, dependencies or this workflow change on main.
+# Changes under models/ are deliberately not a trigger: the pipeline commits the
+# trained model there itself, and that must not start another run.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+      - "src/**"
+      - "requirements*.txt"
+      - ".github/workflows/pipeline.yml"
+  workflow_dispatch:
+
+# Runs queue instead of racing each other to push the model.
+concurrency:
+  group: mlops-pipeline
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  register-dataset:
+    name: 1. Register dataset
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-train.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-train.txt
+
+      - name: Validate dataset schema and print summary
+        run: python src/validate_data.py
+
+  data-prep:
+    name: 2. Prepare data
+    needs: register-dataset
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-train.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-train.txt
+
+      - name: Clean data and create train/test split
+        run: python src/prepare_data.py
+
+      - name: Publish train/test split for the next job
+        uses: actions/upload-artifact@v7
+        with:
+          name: prepared-data
+          path: data/processed/
+          if-no-files-found: error
+
+  model-building:
+    name: 3. Build and track model
+    needs: data-prep
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # needed to push the trained model to main
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-train.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-train.txt
+
+      - name: Download train/test split
+        uses: actions/download-artifact@v8
+        with:
+          name: prepared-data
+          path: data/processed
+
+      - name: Tune models and log experiments to MLflow
+        run: python src/train_model.py --data-dir data/processed
+
+      - name: Keep the MLflow experiment log
+        uses: actions/upload-artifact@v7
+        with:
+          name: mlflow-runs
+          path: mlruns/
+          retention-days: 30
+
+      - name: Commit the trained model to main
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add models/
+          if git diff --cached --quiet; then
+            echo "Model unchanged, nothing to commit."
+          else
+            git commit -m "chore(model): update trained model [skip ci]"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+  verify-app:
+    name: 4. Verify app with committed model
+    needs: model-building
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      # Fresh checkout of main so the model committed by the previous job is included.
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      # Only the deployment dependencies, exactly what Streamlit Cloud installs.
+      - name: Install deployment dependencies
+        run: pip install -r requirements.txt
+
+      - name: Smoke-test the Streamlit app
+        run: python tests/smoke_test_app.py

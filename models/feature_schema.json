@@ -1,0 +1,122 @@
+{
+  "categorical": {
+    "Designation": [
+      "AVP",
+      "Executive",
+      "Manager",
+      "Senior Manager",
+      "VP"
+    ],
+    "Gender": [
+      "Female",
+      "Male"
+    ],
+    "MaritalStatus": [
+      "Divorced",
+      "Married",
+      "Single",
+      "Unmarried"
+    ],
+    "Occupation": [
+      "Free Lancer",
+      "Large Business",
+      "Salaried",
+      "Small Business"
+    ],
+    "ProductPitched": [
+      "Basic",
+      "Deluxe",
+      "King",
+      "Standard",
+      "Super Deluxe"
+    ],
+    "TypeofContact": [
+      "Company Invited",
+      "Self Enquiry"
+    ]
+  },
+  "numeric": {
+    "Age": {
+      "max": 61.0,
+      "median": 36.0,
+      "min": 18.0
+    },
+    "CityTier": {
+      "max": 3.0,
+      "median": 1.0,
+      "min": 1.0
+    },
+    "DurationOfPitch": {
+      "max": 127.0,
+      "median": 14.0,
+      "min": 5.0
+    },
+    "MonthlyIncome": {
+      "max": 38304.0,
+      "median": 22403.0,
+      "min": 1000.0
+    },
+    "NumberOfChildrenVisiting": {
+      "max": 3.0,
+      "median": 1.0,
+      "min": 0.0
+    },
+    "NumberOfFollowups": {
+      "max": 6.0,
+      "median": 4.0,
+      "min": 1.0
+    },
+    "NumberOfPersonVisiting": {
+      "max": 5.0,
+      "median": 3.0,
+      "min": 1.0
+    },
+    "NumberOfTrips": {
+      "max": 22.0,
+      "median": 3.0,
+      "min": 1.0
+    },
+    "OwnCar": {
+      "max": 1.0,
+      "median": 1.0,
+      "min": 0.0
+    },
+    "Passport": {
+      "max": 1.0,
+      "median": 0.0,
+      "min": 0.0
+    },
+    "PitchSatisfactionScore": {
+      "max": 5.0,
+      "median": 3.0,
+      "min": 1.0
+    },
+    "PreferredPropertyStar": {
+      "max": 5.0,
+      "median": 3.0,
+      "min": 3.0
+    }
+  },
+  "observed_designation_product": [
+    [
+      "AVP",
+      "Super Deluxe"
+    ],
+    [
+      "Executive",
+      "Basic"
+    ],
+    [
+      "Manager",
+      "Deluxe"
+    ],
+    [
+      "Senior Manager",
+      "Standard"
+    ],
+    [
+      "VP",
+      "King"
+    ]
+  ]
+}
