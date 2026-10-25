@@ -160,7 +160,12 @@ def main() -> int:
     parser.add_argument("--n-iter", default=20, type=int,
                         help="parameter sets tried per model")
     parser.add_argument("--cv", default=5, type=int, help="cross-validation folds")
+    parser.add_argument("--model-dir", default=MODEL_DIR, type=Path,
+                        help="where to save the model and metrics (default: models/)")
     args = parser.parse_args()
+    model_path = args.model_dir / MODEL_PATH.name
+    metrics_path = args.model_dir / METRICS_PATH.name
+    schema_path = args.model_dir / SCHEMA_PATH.name
 
     train = pd.read_csv(args.data_dir / "train.csv")
     test = pd.read_csv(args.data_dir / "test.csv")
@@ -214,19 +219,18 @@ def main() -> int:
         mlflow.log_metrics({f"selected_test_{k}": v
                             for k, v in results[best_name]["test"].items()})
 
-        MODEL_DIR.mkdir(exist_ok=True)
-        joblib.dump(fitted[best_name], MODEL_PATH)
+        args.model_dir.mkdir(parents=True, exist_ok=True)
+        joblib.dump(fitted[best_name], model_path)
         summary = {"selected_model": best_name,
                    "selection_metric": f"cv_{SELECTION_METRIC}", "models": results}
-        METRICS_PATH.write_text(json.dumps(summary, indent=2, sort_keys=True,
+        metrics_path.write_text(json.dumps(summary, indent=2, sort_keys=True,
                                            default=to_jsonable) + "\n")
-        SCHEMA_PATH.write_text(json.dumps(make_schema(train), indent=2,
+        schema_path.write_text(json.dumps(make_schema(train), indent=2,
                                           sort_keys=True) + "\n")
-        for path in (MODEL_PATH, METRICS_PATH, SCHEMA_PATH):
+        for path in (model_path, metrics_path, schema_path):
             mlflow.log_artifact(str(path))
 
-    print(f"Saved {MODEL_PATH.relative_to(MODEL_DIR.parent)}, "
-          f"{METRICS_PATH.name}, {SCHEMA_PATH.name}")
+    print(f"Saved {model_path.name}, {metrics_path.name}, {schema_path.name} to {args.model_dir}")
     return 0
 
 
